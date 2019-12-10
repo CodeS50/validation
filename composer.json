@@ -1,0 +1,28 @@
+{
+    "name": "CodeS50/validation",
+    "description": "Validation Service ",
+    "homepage": "https://github.com/CodeS50/validation",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.2"
+    },
+    "authors": [
+        {
+            "name": "Kadir Yolalan",
+            "email": "kadiryolalan@gmail.com",
+            "homepage": "https://github.com/CodeS50",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Codes50\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Codes50\\": "tests/"
+        }
+    }
+}
