@@ -1,8 +1,10 @@
 <?php
 
-namespace Codes50;
 
-class Validation
+namespace Codes50\Core;
+
+
+abstract class Checker
 {
     public const ATTR_TYPE = 'type';
     public const ATTR_VALUE = 'value';
@@ -31,153 +33,15 @@ class Validation
     public const TYPE_SELECT = 'select';
 
     /**
-     * @var array
+     * @var string
      */
-    private $_rules;
-
-    /**
-     * @var array
-     */
-    private $_data;
-
-    /**
-     * @var string|null
-     */
-    private $_error;
-    /**
-     * @var array
-     */
-    private $_errors;
-
-    /**
-     * Validation constructor.
-     * @param array $data
-     * @param array $rules
-     */
-    public function __construct(array $data = [], array $rules = [])
-    {
-        $this->_data = $data;
-        $this->_rules = $rules;
-        $this->_errors = [];
-    }
-
-    /**
-     * @return string
-     */
-    public function getError(): ?string
-    {
-        return $this->_error;
-    }
-
-    /**
-     * @return array
-     */
-    public function getErrors(): array
-    {
-        return $this->_errors;
-    }
-
-    /**
-     * @return bool
-     */
-    public function validate(): bool
-    {
-        $data = [];
-        foreach ($this->_rules as $data_key => $rule) {
-            $exp_keys = explode(".", $data_key);
-            $value = $this->_data;
-            foreach ($exp_keys as $exp_key) {
-                if (!isset($value[$exp_key])) {
-                    $value = null;
-                    break;
-                }
-                $value = $value[$exp_key];
-            }
-            $data[$data_key] = $rule;
-            $data[$data_key][self::ATTR_VALUE] = $value;
-            $data[$data_key]["value_type"] = gettype($value);
-        }
-        return $this->wholeValid($data);
-    }
-
-    /**
-     * @param array $data
-     * @return bool
-     */
-    public function wholeValid(array $data): bool
-    {
-        $this->_errors = [];
-        $status = true;
-        foreach ($data as $i => $item) {
-            if (!$this->isValid($item)) {
-                $this->_errors[$i] = $this->_error;
-                $status = false;
-            }
-        }
-        return $status;
-    }
+    protected $_error;
 
     /**
      * @param $data
      * @return bool
      */
-    public function isValid($data): bool
-    {
-        $this->_error = null;
-
-        if (!$this->checkRequired($data)
-            || !$this->checkRegexp($data)) {
-            return false;
-        }
-
-        if (isset($data[self::ATTR_TYPE])) {
-            switch ($data[self::ATTR_TYPE]) {
-                case self::TYPE_INT:
-                    return ($this->checkInt($data)
-                        && $this->checkMin($data)
-                        && $this->checkMax($data));
-                case self::TYPE_DOUBLE:
-                    return ($this->checkDouble($data)
-                        && $this->checkMin($data)
-                        && $this->checkMax($data));
-                case self::TYPE_STRING:
-                    return ($this->checkMinLength($data)
-                        && $this->checkMaxLength($data));
-                case self::TYPE_EMAIL:
-                    return $this->checkEmail($data);
-                case self::TYPE_BOOLEAN:
-                    return $this->checkBoolean($data);
-                case self::TYPE_URL:
-                    return $this->checkUrl($data);
-                case self::TYPE_DOMAIN:
-                    return $this->checkDomain($data);
-                case self::TYPE_IP:
-                    return $this->checkIP($data);
-                case self::TYPE_IPV4:
-                    return $this->checkIPV4($data);
-                case self::TYPE_IPV6:
-                    return $this->checkIPV6($data);
-                case self::TYPE_MAC:
-                    return $this->checkMac($data);
-                case self::TYPE_WEAK_PASSWD:
-                    return $this->checkWeakPassword($data);
-                case self::TYPE_DATE:
-                    return $this->checkDate($data);
-                case self::TYPE_SELECT:
-                    return $this->checkSelect($data);
-                default:
-                    return true;
-            }
-        } else {
-            return true;
-        }
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkRequired($data): bool
+    protected function checkRequired($data): bool
     {
         if (isset($data[self::ATTR_REQUIRED]) && $data[self::ATTR_REQUIRED] === true) {
             if ($data["value_type"] === "boolean") {
@@ -203,7 +67,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkMax($data): bool
+    protected function checkMax($data): bool
     {
         if (isset($data[self::ATTR_MAX])) {
             if ($data["value_type"] === "integer" || $data["value_type"] === "double") {
@@ -222,7 +86,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkMin($data): bool
+    protected function checkMin($data): bool
     {
         if (isset($data[self::ATTR_MIN])) {
             if ($data["value_type"] === "integer" || $data["value_type"] === "double") {
@@ -241,7 +105,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkMaxLength($data): bool
+    protected function checkMaxLength($data): bool
     {
         if (isset($data[self::ATTR_MAX_LENGTH])) {
             if (strlen($data[self::ATTR_VALUE]) <= $data[self::ATTR_MAX_LENGTH]) {
@@ -257,7 +121,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkMinLength($data): bool
+    protected function checkMinLength($data): bool
     {
         if (isset($data[self::ATTR_MIN_LENGTH])) {
             if (strlen($data[self::ATTR_VALUE]) >= $data[self::ATTR_MIN_LENGTH]) {
@@ -273,7 +137,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkRegexp($data): bool
+    protected function checkRegexp($data): bool
     {
         if (isset($data[self::ATTR_REGEXP])) {
             if (filter_var($data[self::ATTR_REGEXP], FILTER_VALIDATE_REGEXP) !== false) {
@@ -292,7 +156,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkInt($data): bool
+    protected function checkInt($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_INT) !== false) {
             return true;
@@ -305,7 +169,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkDouble($data): bool
+    protected function checkDouble($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_FLOAT) !== false) {
             return true;
@@ -318,7 +182,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkEmail($data): bool
+    protected function checkEmail($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_EMAIL)) {
             return true;
@@ -331,7 +195,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkBoolean($data): bool
+    protected function checkBoolean($data): bool
     {
         if (is_bool($data[self::ATTR_VALUE]) === true) {
             return true;
@@ -344,7 +208,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkUrl($data): bool
+    protected function checkUrl($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_URL)) {
             return true;
@@ -357,7 +221,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkDomain($data): bool
+    protected function checkDomain($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             return true;
@@ -370,7 +234,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkIP($data): bool
+    protected function checkIP($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP)) {
             return true;
@@ -383,7 +247,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkIPV4($data): bool
+    protected function checkIPV4($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             return true;
@@ -396,7 +260,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkIPV6($data): bool
+    protected function checkIPV6($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             return true;
@@ -409,7 +273,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkMac($data): bool
+    protected function checkMac($data): bool
     {
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_MAC)) {
             return true;
@@ -422,7 +286,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkWeakPassword($data): bool
+    protected function checkWeakPassword($data): bool
     {
         if ((boolean)preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[.!@#$&+\/*_\-])[0-9a-zA-Z.!@#$&+\/*_\-]{6,}$/', $data[self::ATTR_VALUE])) {
             return true;
@@ -435,7 +299,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkDate($data): bool
+    protected function checkDate($data): bool
     {
         $unix = strtotime($data[self::ATTR_VALUE]);
         if ($unix !== false || $unix != -1) {
@@ -449,7 +313,7 @@ class Validation
      * @param $data
      * @return bool
      */
-    private function checkSelect($data): bool
+    protected function checkSelect($data): bool
     {
         if (isset($data[self::ATTR_OPTIONS])
             && is_array($data[self::ATTR_OPTIONS])
@@ -460,6 +324,4 @@ class Validation
         $this->_error = self::TYPE_SELECT;
         return false;
     }
-
 }
-

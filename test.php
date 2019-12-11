@@ -1,7 +1,7 @@
 <?php
 require 'vendor/autoload.php';
 
-use Codes50\Validation;
+use Codes50\Validator;
 
 $data = [
     "int" => 10,
@@ -21,69 +21,69 @@ $data = [
     "subtest" => [
         "sub1" => 111,
         "sub2" => [
-            "sub3" => 1.1
+            "sub3" => "a"
         ]
     ]
 ];
 $rules = [
     "int" => [
-        Validation::ATTR_TYPE => Validation::TYPE_INT,
-        Validation::ATTR_REQUIRED => true,
-        Validation::ATTR_MAX => 100,
-        Validation::ATTR_MIN => 1
+        Validator::ATTR_TYPE => Validator::TYPE_INT,
+        Validator::ATTR_REQUIRED => true,
+        Validator::ATTR_MAX => 100,
+        Validator::ATTR_MIN => 1
     ],
     "double" => [
-        Validation::ATTR_TYPE => Validation::TYPE_DOUBLE,
-        Validation::ATTR_REQUIRED => true,
-        Validation::ATTR_MAX => 100,
-        Validation::ATTR_MIN => 1
+        Validator::ATTR_TYPE => Validator::TYPE_DOUBLE,
+        Validator::ATTR_REQUIRED => true,
+        Validator::ATTR_MAX => 100,
+        Validator::ATTR_MIN => 1
     ],
     "string" => [
-        Validation::ATTR_TYPE => Validation::TYPE_STRING,
-        Validation::ATTR_REQUIRED => true,
-        Validation::ATTR_MAX_LENGTH => 3,
-        Validation::ATTR_MIN_LENGTH => 1
+        Validator::ATTR_TYPE => Validator::TYPE_STRING,
+        Validator::ATTR_REQUIRED => true,
+        Validator::ATTR_MAX_LENGTH => 3,
+        Validator::ATTR_MIN_LENGTH => 1
     ],
     "email" => [
-        Validation::ATTR_TYPE => Validation::TYPE_EMAIL,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_EMAIL,
+        Validator::ATTR_REQUIRED => true
     ],
     "boolean" => [
-        Validation::ATTR_TYPE => Validation::TYPE_BOOLEAN,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_BOOLEAN,
+        Validator::ATTR_REQUIRED => true
     ],
     "url" => [
-        Validation::ATTR_TYPE => Validation::TYPE_URL,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_URL,
+        Validator::ATTR_REQUIRED => true
     ],
     "domain" => [
-        Validation::ATTR_TYPE => Validation::TYPE_DOMAIN,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_DOMAIN,
+        Validator::ATTR_REQUIRED => true
     ],
     "ip" => [
-        Validation::ATTR_TYPE => Validation::TYPE_IP,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_IP,
+        Validator::ATTR_REQUIRED => true
     ],
     "ipv4" => [
-        Validation::ATTR_TYPE => Validation::TYPE_IPV4,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_IPV4,
+        Validator::ATTR_REQUIRED => true
     ],
     "ipv6" => [
-        Validation::ATTR_TYPE => Validation::TYPE_IPV6,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_IPV6,
+        Validator::ATTR_REQUIRED => true
     ],
     "mac" => [
-        Validation::ATTR_TYPE => Validation::TYPE_MAC,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_MAC,
+        Validator::ATTR_REQUIRED => true
     ],
     "weekpassword" => [
-        Validation::ATTR_TYPE => Validation::TYPE_WEAK_PASSWD,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_WEAK_PASSWD,
+        Validator::ATTR_REQUIRED => true
     ],
     "select" => [
-        Validation::ATTR_TYPE => Validation::TYPE_SELECT,
-        Validation::ATTR_REQUIRED => true,
-        Validation::ATTR_OPTIONS => [
+        Validator::ATTR_TYPE => Validator::TYPE_SELECT,
+        Validator::ATTR_REQUIRED => true,
+        Validator::ATTR_OPTIONS => [
             1,
             2,
             3,
@@ -91,32 +91,41 @@ $rules = [
         ]
     ],
     "date" => [
-        Validation::ATTR_TYPE => Validation::TYPE_DATE,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_DATE,
+        Validator::ATTR_REQUIRED => true
     ],
     "subtest.sub1" => [
-        Validation::ATTR_TYPE => Validation::TYPE_INT,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_INT,
+        Validator::ATTR_REQUIRED => true
     ]
 ];
 
 $subrules = [
     "int" => [
-        Validation::ATTR_TYPE => Validation::TYPE_INT,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_INT,
+        Validator::ATTR_REQUIRED => true
     ],
     "subtest.sub1" => [
-        Validation::ATTR_TYPE => Validation::TYPE_INT,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_INT,
+        Validator::ATTR_REQUIRED => true
     ],
     "subtest.sub2.sub3" => [
-        Validation::ATTR_TYPE => Validation::TYPE_DOUBLE,
-        Validation::ATTR_REQUIRED => true
+        Validator::ATTR_TYPE => Validator::TYPE_DOUBLE,
+        Validator::ATTR_REQUIRED => true
     ]
 ];
 
 //print_r($rules);
 
-$validate = new Validation($data, $subrules);
+$validate = Validator::make($data, $subrules);
 var_dump($validate->validate());
-print_r($validate->getErrors());
+print_r($validate->error->all());
+
+$single = [
+    Validator::ATTR_TYPE => Validator::TYPE_INT,
+    Validator::ATTR_REQUIRED => true
+];
+
+var_dump($validate->singleValid($single, "test"));
+
+
