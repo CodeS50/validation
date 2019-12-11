@@ -1,41 +1,70 @@
 <?php
+
 namespace Codes50;
 
-class Validation {
-    /**
-     * @var array
-     */
-    private $_data = [];
+class Validation
+{
+    public const ATTR_TYPE = 'type';
+    public const ATTR_VALUE = 'value';
+    public const ATTR_OPTIONS = 'options';
+    public const ATTR_REQUIRED = 'required';
+    public const ATTR_NULLABLE = 'nullable';
+    public const ATTR_MIN_LENGTH = 'min_length';
+    public const ATTR_MAX_LENGTH = 'max_length';
+    public const ATTR_MIN = 'min';
+    public const ATTR_MAX = 'max';
+    public const ATTR_REGEXP = 'regexp';
+
+    public const TYPE_STRING = 'string';
+    public const TYPE_INT = 'int';
+    public const TYPE_DOUBLE = 'double';
+    public const TYPE_EMAIL = 'email';
+    public const TYPE_BOOLEAN = 'boolean';
+    public const TYPE_URL = 'url';
+    public const TYPE_DOMAIN = 'domain';
+    public const TYPE_IP = 'ip';
+    public const TYPE_IPV4 = 'ipv4';
+    public const TYPE_IPV6 = 'ipv6';
+    public const TYPE_MAC = 'mac';
+    public const TYPE_WEAK_PASSWD = 'weak_passwd';
+    public const TYPE_DATE = 'date';
+    public const TYPE_SELECT = 'select';
 
     /**
      * @var array
      */
-    private $_conf = [];
+    private $_rules;
 
-    /**
-     * @var string
-     */
-    private $_error = "";
     /**
      * @var array
      */
-    private $_errors = [];
+    private $_data;
+
+    /**
+     * @var string|null
+     */
+    private $_error;
+    /**
+     * @var array
+     */
+    private $_errors;
 
     /**
      * Validation constructor.
-     * @param array|null $data
-     * @param array|null $conf
+     * @param array $data
+     * @param array $rules
      */
-    public function __construct($data = null, $conf = null)
+    public function __construct(array $data = [], array $rules = [])
     {
         $this->_data = $data;
-        $this->_conf = $conf;
+        $this->_rules = $rules;
+        $this->_errors = [];
     }
 
     /**
      * @return string
      */
-    public function getError(): string
+    public function getError(): ?string
     {
         return $this->_error;
     }
@@ -54,9 +83,19 @@ class Validation {
     public function validate(): bool
     {
         $data = [];
-        foreach ($this->_conf as $key => $conf) {
-            $data[$key] = $conf;
-            $data[$key]["value"] = $this->_data[$key] ?? null;
+        foreach ($this->_rules as $data_key => $rule) {
+            $exp_keys = explode(".", $data_key);
+            $value = $this->_data;
+            foreach ($exp_keys as $exp_key) {
+                if (!isset($value[$exp_key])) {
+                    $value = null;
+                    break;
+                }
+                $value = $value[$exp_key];
+            }
+            $data[$data_key] = $rule;
+            $data[$data_key][self::ATTR_VALUE] = $value;
+            $data[$data_key]["value_type"] = gettype($value);
         }
         return $this->wholeValid($data);
     }
@@ -84,212 +123,80 @@ class Validation {
      */
     public function isValid($data): bool
     {
-        $this->_error = '';
-        if ((!isset($data["required"]) || $data["required"] === false) && ($data["value"] === '' || $data["value"] === null)) {
-            return true;
-        }
-        if (!$this->checkProperty($data)) {
+        $this->_error = null;
+
+        if (!$this->checkRequired($data)
+            || !$this->checkRegexp($data)) {
             return false;
         }
 
-        switch ($data["type"]) {
-            case 'email':
-                return $this->checkEmail($data);
-            case 'password':
-                return $this->checkPassword($data);
-            case 'checkbox':
-                return $this->checkCheckbox($data);
-            case 'number':
-            case 'integer':
-                return $this->checkNumber($data);
-            case 'boolean':
-                return $this->checkBoolean($data);
-            case 'url':
-                return $this->checkUrl($data);
-            case 'mac':
-                return $this->checkMac($data);
-            case 'ip':
-                return $this->checkIP($data);
-            case 'domain':
-                return $this->checkDomain($data);
-            case 'full_date':
-                return $this->checkDate($data);
-            case 'string_alpha':
-                return $this->checkAlpha($data);
-            case 'text':
-            case 'string':
-            case 'date':
-                return $this->checkDefault();
-            default:
-                return $this->checkDefault();
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    private function checkDefault(): bool
-    {
-        return true;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkCheckbox($data): bool
-    {
-        return true;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkDate($data): bool
-    {
-        $unix = strtotime($data["value"]);
-        if ($unix !== false || $unix != -1) {
+        if (isset($data[self::ATTR_TYPE])) {
+            switch ($data[self::ATTR_TYPE]) {
+                case self::TYPE_INT:
+                    return ($this->checkInt($data)
+                        && $this->checkMin($data)
+                        && $this->checkMax($data));
+                case self::TYPE_DOUBLE:
+                    return ($this->checkDouble($data)
+                        && $this->checkMin($data)
+                        && $this->checkMax($data));
+                case self::TYPE_STRING:
+                    return ($this->checkMinLength($data)
+                        && $this->checkMaxLength($data));
+                case self::TYPE_EMAIL:
+                    return $this->checkEmail($data);
+                case self::TYPE_BOOLEAN:
+                    return $this->checkBoolean($data);
+                case self::TYPE_URL:
+                    return $this->checkUrl($data);
+                case self::TYPE_DOMAIN:
+                    return $this->checkDomain($data);
+                case self::TYPE_IP:
+                    return $this->checkIP($data);
+                case self::TYPE_IPV4:
+                    return $this->checkIPV4($data);
+                case self::TYPE_IPV6:
+                    return $this->checkIPV6($data);
+                case self::TYPE_MAC:
+                    return $this->checkMac($data);
+                case self::TYPE_WEAK_PASSWD:
+                    return $this->checkWeakPassword($data);
+                case self::TYPE_DATE:
+                    return $this->checkDate($data);
+                case self::TYPE_SELECT:
+                    return $this->checkSelect($data);
+                default:
+                    return true;
+            }
+        } else {
             return true;
         }
-        $this->_error = 'error_invalidformat';
-        return false;
     }
 
     /**
      * @param $data
      * @return bool
      */
-    private function checkBoolean($data): bool
+    private function checkRequired($data): bool
     {
-        if (is_bool($data["value"]) === true) {
-            return true;
-        }
-        $this->_error = 'error_invalidboolean';
-        return false;
-    }
+        if (isset($data[self::ATTR_REQUIRED]) && $data[self::ATTR_REQUIRED] === true) {
+            if ($data["value_type"] === "boolean") {
+                return true;
+            }
 
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkNumber($data): bool
-    {
-        if (filter_var($data["value"], FILTER_VALIDATE_INT) !== false) {
-            return true;
-        }
-        $this->_error = 'error_isnumber';
-        return false;
-    }
+            // Nullable fix
+            if ($data["value_type"] === "NULL" && isset($data[self::ATTR_NULLABLE]) && $data[self::ATTR_NULLABLE] === true) {
+                return true;
+            }
 
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkPassword($data): bool
-    {
-        return true;
-        //sms onayında hata veriyor!
-        if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{1,}$/', $data["value"]) !== 0) {
+            if (strlen($data[self::ATTR_VALUE]) > 0) {
+                return true;
+            }
+            $this->_error = self::ATTR_REQUIRED;
+            return false;
+        } else {
             return true;
         }
-        $this->_error = 'error_weakpassword';
-        return false;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkAlpha($data): bool
-    {
-        if (preg_match('/^\D+[^\!@£$€₺#^+\-%&\/\\()\[\]={}?*,;`~:.<>|"]$/', $data["value"]) !== 0) {
-            return true;
-        }
-        $this->_error = 'error_invalidstring';
-        return false;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkEmail($data): bool
-    {
-        if (filter_var($data["value"], FILTER_VALIDATE_EMAIL)) {
-            return true;
-        }
-        $this->_error = 'error_invalidemail';
-        return false;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkUrl($data): bool
-    {
-        if (filter_var($data["value"], FILTER_VALIDATE_URL)) {
-            return true;
-        }
-        $this->_error = 'error_invalidurl';
-        return false;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkMac($data): bool
-    {
-        if (filter_var($data["value"], FILTER_VALIDATE_MAC)) {
-            return true;
-        }
-        $this->_error = 'error_invalidmac';
-        return false;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkDomain($data): bool
-    {
-        if (filter_var($data["value"], FILTER_VALIDATE_DOMAIN)) {
-            return true;
-        }
-        $this->_error = 'error_invaliddomain';
-        return false;
-    }
-
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkIP($data): bool
-    {
-        if (filter_var($data["value"], FILTER_VALIDATE_IP)) {
-            return true;
-        }
-        $this->_error = 'error_invalidip';
-        return false;
-    }
-
-    /* property methods */
-    /**
-     * @param $data
-     * @return bool
-     */
-    private function checkProperty($data): bool
-    {
-        if ($this->checkRequired($data)
-            && $this->checkMinLength($data)
-            && $this->checkMaxLength($data)
-            && $this->checkMax($data)
-            && $this->checkMin($data)) {
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -298,14 +205,17 @@ class Validation {
      */
     private function checkMax($data): bool
     {
-        if (($data["type"] === "number" || $data["type"] === "integer") && isset($data["max"]) && $this->checkNumber($data)) {
-            if ($data["value"] <= $data["max"]) {
-                return true;
+        if (isset($data[self::ATTR_MAX])) {
+            if ($data["value_type"] === "integer" || $data["value_type"] === "double") {
+                if ($data[self::ATTR_VALUE] <= $data[self::ATTR_MAX]) {
+                    return true;
+                }
             }
-            $this->_error = 'error_maxnumber';
+            $this->_error = self::ATTR_MAX;
             return false;
+        } else {
+            return true;
         }
-        return true;
     }
 
     /**
@@ -314,14 +224,17 @@ class Validation {
      */
     private function checkMin($data): bool
     {
-        if (($data["type"] === "number" || $data["type"] === "integer") && isset($data["min"]) && $this->checkNumber($data)) {
-            if ($data["value"] >= $data["min"]) {
-                return true;
+        if (isset($data[self::ATTR_MIN])) {
+            if ($data["value_type"] === "integer" || $data["value_type"] === "double") {
+                if ($data[self::ATTR_VALUE] >= $data[self::ATTR_MIN]) {
+                    return true;
+                }
             }
-            $this->_error = 'error_minnumber';
+            $this->_error = self::ATTR_MIN;
             return false;
+        } else {
+            return true;
         }
-        return true;
     }
 
     /**
@@ -330,11 +243,11 @@ class Validation {
      */
     private function checkMaxLength($data): bool
     {
-        if (isset($data["maxLength"])) {
-            if (strlen($data["value"]) <= $data["maxLength"]) {
+        if (isset($data[self::ATTR_MAX_LENGTH])) {
+            if (strlen($data[self::ATTR_VALUE]) <= $data[self::ATTR_MAX_LENGTH]) {
                 return true;
             }
-            $this->_error = 'error_maxlength';
+            $this->_error = self::ATTR_MAX_LENGTH;
             return false;
         }
         return true;
@@ -346,11 +259,11 @@ class Validation {
      */
     private function checkMinLength($data): bool
     {
-        if (isset($data["minLength"])) {
-            if (strlen($data["value"]) >= $data["minLength"]) {
+        if (isset($data[self::ATTR_MIN_LENGTH])) {
+            if (strlen($data[self::ATTR_VALUE]) >= $data[self::ATTR_MIN_LENGTH]) {
                 return true;
             }
-            $this->_error = 'error_minlength';
+            $this->_error = self::ATTR_MIN_LENGTH;
             return false;
         }
         return true;
@@ -360,16 +273,193 @@ class Validation {
      * @param $data
      * @return bool
      */
-    private function checkRequired($data): bool
+    private function checkRegexp($data): bool
     {
-        if (isset($data["required"]) && $data["required"] === true) {
-            if (strlen($data["value"]) > 0 || is_bool($data["value"]) === true) {
-                return true;
+        if (isset($data[self::ATTR_REGEXP])) {
+            if (filter_var($data[self::ATTR_REGEXP], FILTER_VALIDATE_REGEXP) !== false) {
+                if ((boolean)preg_match($data[self::ATTR_REGEXP], $data[self::ATTR_VALUE])) {
+                    return true;
+                }
             }
-            $this->_error = 'error_required';
+
+            $this->_error = self::ATTR_REGEXP;
             return false;
         }
         return true;
     }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkInt($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_INT) !== false) {
+            return true;
+        }
+        $this->_error = self::TYPE_INT;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkDouble($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_FLOAT) !== false) {
+            return true;
+        }
+        $this->_error = self::TYPE_DOUBLE;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkEmail($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_EMAIL)) {
+            return true;
+        }
+        $this->_error = self::TYPE_EMAIL;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkBoolean($data): bool
+    {
+        if (is_bool($data[self::ATTR_VALUE]) === true) {
+            return true;
+        }
+        $this->_error = self::TYPE_BOOLEAN;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkUrl($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_URL)) {
+            return true;
+        }
+        $this->_error = self::TYPE_URL;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkDomain($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+            return true;
+        }
+        $this->_error = self::TYPE_DOMAIN;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkIP($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP)) {
+            return true;
+        }
+        $this->_error = self::TYPE_IP;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkIPV4($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return true;
+        }
+        $this->_error = self::TYPE_IPV4;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkIPV6($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return true;
+        }
+        $this->_error = self::TYPE_IPV6;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkMac($data): bool
+    {
+        if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_MAC)) {
+            return true;
+        }
+        $this->_error = self::TYPE_MAC;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkWeakPassword($data): bool
+    {
+        if ((boolean)preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[.!@#$&+\/*_\-])[0-9a-zA-Z.!@#$&+\/*_\-]{6,}$/', $data[self::ATTR_VALUE])) {
+            return true;
+        }
+        $this->_error = self::TYPE_WEAK_PASSWD;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkDate($data): bool
+    {
+        $unix = strtotime($data[self::ATTR_VALUE]);
+        if ($unix !== false || $unix != -1) {
+            return true;
+        }
+        $this->_error = self::TYPE_DATE;
+        return false;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    private function checkSelect($data): bool
+    {
+        if (isset($data[self::ATTR_OPTIONS])
+            && is_array($data[self::ATTR_OPTIONS])
+            && in_array($data[self::ATTR_VALUE], $data[self::ATTR_OPTIONS])) {
+            return true;
+        }
+
+        $this->_error = self::TYPE_SELECT;
+        return false;
+    }
+
 }
 
