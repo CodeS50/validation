@@ -4,7 +4,7 @@
 namespace Codes50\Core;
 
 
-abstract class Checker
+abstract class DefaultPlugins
 {
     public const ATTR_TYPE = 'type';
     public const ATTR_VALUE = 'value';
@@ -58,6 +58,23 @@ abstract class Checker
             }
             $this->_error = self::ATTR_REQUIRED;
             return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    protected function checkNullable($data): bool
+    {
+        if (!(isset($data[self::ATTR_NULLABLE]) && $data[self::ATTR_NULLABLE] === true)) {
+            if ($data["value_type"] === "NULL") {
+                $this->_error = self::ATTR_NULLABLE;
+                return false;
+            }
+            return true;
         } else {
             return true;
         }
