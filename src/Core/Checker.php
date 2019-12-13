@@ -67,6 +67,23 @@ abstract class Checker
      * @param $data
      * @return bool
      */
+    protected function checkNullable($data): bool
+    {
+        if (!(isset($data[self::ATTR_NULLABLE]) && $data[self::ATTR_NULLABLE] === true)) {
+            if ($data["value_type"] === "NULL") {
+                $this->_error = self::ATTR_NULLABLE;
+                return false;
+            }
+            return true;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
     protected function checkMax($data): bool
     {
         if (isset($data[self::ATTR_MAX])) {
