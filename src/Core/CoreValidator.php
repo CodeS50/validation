@@ -143,41 +143,6 @@ abstract class CoreValidator extends DefaultPlugins
         }
 
         if (isset($data[self::ATTR_TYPE])) {
-            switch ($data[self::ATTR_TYPE]) {
-                case self::TYPE_INT:
-                    return ($this->checkInt($data)
-                        && $this->checkMin($data)
-                        && $this->checkMax($data));
-                case self::TYPE_DOUBLE:
-                    return ($this->checkDouble($data)
-                        && $this->checkMin($data)
-                        && $this->checkMax($data));
-                case self::TYPE_STRING:
-                    return ($this->checkMinLength($data)
-                        && $this->checkMaxLength($data));
-                case self::TYPE_EMAIL:
-                    return $this->checkEmail($data);
-                case self::TYPE_BOOLEAN:
-                    return $this->checkBoolean($data);
-                case self::TYPE_URL:
-                    return $this->checkUrl($data);
-                case self::TYPE_DOMAIN:
-                    return $this->checkDomain($data);
-                case self::TYPE_IP:
-                    return $this->checkIP($data);
-                case self::TYPE_IPV4:
-                    return $this->checkIPV4($data);
-                case self::TYPE_IPV6:
-                    return $this->checkIPV6($data);
-                case self::TYPE_MAC:
-                    return $this->checkMac($data);
-                case self::TYPE_WEAK_PASSWD:
-                    return $this->checkWeakPassword($data);
-                case self::TYPE_DATE:
-                    return $this->checkDate($data);
-                case self::TYPE_SELECT:
-                    return $this->checkSelect($data);
-            }
             return $this->checkOtherPlugins($data[self::ATTR_TYPE], $data);
         } else {
             return true;
@@ -229,25 +194,36 @@ abstract class CoreValidator extends DefaultPlugins
     private function checkOtherPlugins(string $attr_type, array $data): bool
     {
         if (isset($this->plugins["type"][$attr_type])) {
-            if (method_exists($this, $this->plugins["type"][$attr_type])) {
-                $has_type = call_user_func_array([
-                    $this,
-                    $this->plugins["type"][$attr_type]
-                ], [$data]);
-                if ($has_type) {
-                    if (isset($this->plugins["type_to_attr"][$attr_type])) {
-                        foreach ($this->plugins["type_to_attr"][$attr_type] as $attribute) {
-                            if (!(boolean)call_user_func_array(array($this, $this->plugins["attr"][$attribute]), [$data])) {
-                                return false;
+            if (!empty($this->plugins["type"][$attr_type])) {
+                if (method_exists($this, $this->plugins["type"][$attr_type])) {
+                    $has_type = call_user_func_array([
+                        $this,
+                        $this->plugins["type"][$attr_type]
+                    ], [$data]);
+                    if ($has_type) {
+                        if (isset($this->plugins["type_to_attr"][$attr_type])) {
+                            foreach ($this->plugins["type_to_attr"][$attr_type] as $attribute) {
+                                if (!(boolean)call_user_func_array(array($this, $this->plugins["attr"][$attribute]), [$data])) {
+                                    return false;
+                                }
                             }
                         }
+                        return true;
                     }
-                    return true;
+                    return false;
+                } else {
+                    $this->_error = "plugin_method_not_avaliable";
+                    return false;
                 }
-                return false;
             } else {
-                $this->_error = "plugin_method_not_avaliable";
-                return false;
+                if (isset($this->plugins["type_to_attr"][$attr_type])) {
+                    foreach ($this->plugins["type_to_attr"][$attr_type] as $attribute) {
+                        if (!(boolean)call_user_func_array(array($this, $this->plugins["attr"][$attribute]), [$data])) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
             }
         } else {
             $this->_error = "plugin_not_avaliable";
