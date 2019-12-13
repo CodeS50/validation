@@ -4,7 +4,7 @@
 namespace Codes50\Core;
 
 
-abstract class CoreValidator extends Checker
+abstract class CoreValidator extends DefaultPlugins
 {
     /**
      * @var array

@@ -4,7 +4,7 @@
 namespace Codes50\Core;
 
 
-abstract class Checker
+abstract class DefaultPlugins
 {
     public const ATTR_TYPE = 'type';
     public const ATTR_VALUE = 'value';
