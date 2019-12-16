@@ -149,5 +149,79 @@ if($validate->singleValid($single, "test") !== true) {
 max_length
 ```
 
+## Customize Usage
+need to extend it with the "CoreValidator" class.
+```php
+use Codes50\Core\CoreValidator;
 
+class CustomValidator extends CoreValidator
+{
+    public function __construct(array $data = [], array $rules = [])
+    {
+        parent::__construct($data, $rules);
+    }
+}
+```
 
+* Add Custom Attribute Plugin:
+```php
+use Codes50\Core\CoreValidator;
+
+class Validator extends CoreValidator
+{
+    public const TYPE_TEST_ATTR = 'testattr';
+
+    public function __construct(array $data = [], array $rules = [])
+    {
+        parent::__construct($data, $rules);
+        $this->registerAttrPlugin(self::TYPE_TEST_ATTR, "checkAttrTest");
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    protected function checkAttrTest($data): bool
+    {
+        $this->_error = "testmessage";
+        return false;
+    }
+}
+```
+
+* Add Custom Attribute Plugin:
+```php
+use Codes50\Core\CoreValidator;
+
+class Validator extends CoreValidator
+{
+    public const TYPE_TEST_ATTR = 'testattr';
+
+    public function __construct(array $data = [], array $rules = [])
+    {
+        parent::__construct($data, $rules);
+        $this->registerTypePlugin(self::TYPE_TEST, "checkTest", [self::TYPE_TEST_ATTR, self::ATTR_MIN_LENGTH, self::ATTR_MAX_LENGTH]);
+        $this->registerAttrPlugin(self::TYPE_TEST_ATTR, "checkAttrTest");
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    protected function checkTest($data)
+    {
+        // $this->_error = "testmessage";
+        return true;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    protected function checkAttrTest($data): bool
+    {
+        $this->_error = "testmessage";
+        return false;
+    }
+}
+```
