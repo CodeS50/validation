@@ -169,12 +169,12 @@ use Codes50\Core\CoreValidator;
 
 class Validator extends CoreValidator
 {
-    public const TYPE_TEST_ATTR = 'testattr';
+    public const ATTR_TEST = 'attr_test';
 
     public function __construct(array $data = [], array $rules = [])
     {
         parent::__construct($data, $rules);
-        $this->registerAttrPlugin(self::TYPE_TEST_ATTR, "checkAttrTest");
+        $this->registerAttrPlugin(self::ATTR_TEST, "checkAttrTest");
     }
 
     /**
@@ -195,8 +195,8 @@ use Codes50\Core\CoreValidator;
 
 class Validator extends CoreValidator
 {
-    public const ATTR_TEST = 'testattr';
-    public const TYPE_TEST = 'testattr';
+    public const TYPE_TEST = 'type_test';
+    public const ATTR_TEST = 'attr_test';
 
     public function __construct(array $data = [], array $rules = [])
     {
