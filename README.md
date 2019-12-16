@@ -195,20 +195,21 @@ use Codes50\Core\CoreValidator;
 
 class Validator extends CoreValidator
 {
-    public const TYPE_TEST_ATTR = 'testattr';
+    public const ATTR_TEST = 'testattr';
+    public const TYPE_TEST = 'testattr';
 
     public function __construct(array $data = [], array $rules = [])
     {
         parent::__construct($data, $rules);
-        $this->registerTypePlugin(self::TYPE_TEST, "checkTest", [self::TYPE_TEST_ATTR, self::ATTR_MIN_LENGTH, self::ATTR_MAX_LENGTH]);
-        $this->registerAttrPlugin(self::TYPE_TEST_ATTR, "checkAttrTest");
+        $this->registerTypePlugin(self::TYPE_TEST, "checkTest", [self::ATTR_TEST, self::ATTR_MIN_LENGTH, self::ATTR_MAX_LENGTH]);
+        $this->registerAttrPlugin(self::ATTR_TEST, "checkAttrTest");
     }
 
     /**
      * @param $data
      * @return bool
      */
-    protected function checkTest($data)
+    protected function checkTest($data): bool
     {
         // $this->_error = "testmessage";
         return true;
