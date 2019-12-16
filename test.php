@@ -2,6 +2,41 @@
 require 'vendor/autoload.php';
 
 use Codes50\Validator;
+use Codes50\Core\CoreValidator;
+
+class CustomValidator extends CoreValidator
+{
+    public const TYPE_TEST = 'type_test';
+    public const ATTR_TEST = 'attr_test';
+
+    public function __construct(array $data = [], array $rules = [])
+    {
+        parent::__construct($data, $rules);
+
+        $this->registerTypePlugin(self::TYPE_TEST, "checkTest", [self::ATTR_TEST, self::ATTR_MIN_LENGTH, self::ATTR_MAX_LENGTH]);
+        $this->registerAttrPlugin(self::ATTR_TEST, "checkAttrTest");
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    protected function checkTest($data)
+    {
+        // $this->_error = "testmessage";
+        return true;
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     */
+    protected function checkAttrTest($data)
+    {
+        $this->_error = "testmessage";
+        return false;
+    }
+}
 
 $data = [
     "int" => 10,
@@ -117,15 +152,28 @@ $subrules = [
 
 //print_r($rules);
 
-$validate = Validator::make($data, $subrules);
+$validate = Validator::make($data, $rules);
 var_dump($validate->validate());
 print_r($validate->error->all());
 
 $single = [
-    Validator::ATTR_TYPE => Validator::TYPE_INT,
-    Validator::ATTR_REQUIRED => true
+    Validator::ATTR_TYPE => Validator::TYPE_STRING,
+    Validator::ATTR_REQUIRED => true,
+    Validator::ATTR_MAX_LENGTH => 3
 ];
+if($validate->singleValid($single, "test") !== true) {
+    $error = $validate->singleValid($single, "test");
+    echo $error;
+}
 
-var_dump($validate->singleValid($single, "test"));
 
-
+$validate = New CustomValidator();
+$single = [
+    CustomValidator::ATTR_TYPE => CustomValidator::TYPE_TEST,
+    CustomValidator::ATTR_REQUIRED => true,
+    CustomValidator::ATTR_TEST => 3
+];
+if($validate->singleValid($single, "test") !== true) {
+    $error = $validate->singleValid($single, "test");
+    echo $error;
+}
