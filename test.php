@@ -15,6 +15,8 @@ class CustomValidator extends CoreValidator
 
         $this->registerTypePlugin(self::TYPE_TEST, "checkTest", [self::ATTR_TEST, self::ATTR_MIN_LENGTH, self::ATTR_MAX_LENGTH]);
         $this->registerAttrPlugin(self::ATTR_TEST, "checkAttrTest");
+
+        $this->setLanguage("en");
     }
 
     /**
@@ -169,7 +171,7 @@ if($validate->singleValid($single, "test") !== true) {
 
 $validate = New CustomValidator();
 $single = [
-    CustomValidator::ATTR_TYPE => CustomValidator::TYPE_TEST,
+    CustomValidator::ATTR_TYPE => CustomValidator::TYPE_TEST."1",
     CustomValidator::ATTR_REQUIRED => true,
     CustomValidator::ATTR_TEST => 3
 ];
@@ -177,3 +179,33 @@ if($validate->singleValid($single, "test") !== true) {
     $error = $validate->singleValid($single, "test");
     echo $error;
 }
+
+
+$subrules = [
+    "int" => [
+        CustomValidator::ATTR_TYPE => CustomValidator::TYPE_INT,
+        CustomValidator::ATTR_REQUIRED => true
+    ],
+    "subtest.sub1" => [
+        CustomValidator::ATTR_TYPE => CustomValidator::TYPE_INT,
+        CustomValidator::ATTR_REQUIRED => true
+    ],
+    "subtest.sub2.sub3" => [
+        CustomValidator::ATTR_TYPE => CustomValidator::TYPE_DOUBLE,
+        CustomValidator::ATTR_REQUIRED => true
+    ]
+];
+$data = [
+    "int" => 10.5,
+    "subtest" => [
+        "sub1" => 111,
+        "sub2" => [
+            "sub3" => "a"
+        ]
+    ]
+];
+//print_r($rules);
+
+$validate = CustomValidator::make($data, $subrules);
+var_dump($validate->validate());
+print_r($validate->error->all());

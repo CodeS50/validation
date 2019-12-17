@@ -56,7 +56,7 @@ abstract class DefaultPlugins
             if (strlen($data[self::ATTR_VALUE]) > 0) {
                 return true;
             }
-            $this->_error = self::ATTR_REQUIRED;
+            $this->_error = "is_required";
             return false;
         } else {
             return true;
@@ -71,7 +71,7 @@ abstract class DefaultPlugins
     {
         if (!(isset($data[self::ATTR_NULLABLE]) && $data[self::ATTR_NULLABLE] === true)) {
             if ($data["value_type"] === "NULL") {
-                $this->_error = self::ATTR_NULLABLE;
+                $this->_error = "cannot_be_null";
                 return false;
             }
             return true;
@@ -92,7 +92,7 @@ abstract class DefaultPlugins
                     return true;
                 }
             }
-            $this->_error = self::ATTR_MAX;
+            $this->_error = "number_max_exceed";
             return false;
         } else {
             return true;
@@ -111,7 +111,7 @@ abstract class DefaultPlugins
                     return true;
                 }
             }
-            $this->_error = self::ATTR_MIN;
+            $this->_error = "number_min_exceed";
             return false;
         } else {
             return true;
@@ -128,7 +128,7 @@ abstract class DefaultPlugins
             if (strlen($data[self::ATTR_VALUE]) <= $data[self::ATTR_MAX_LENGTH]) {
                 return true;
             }
-            $this->_error = self::ATTR_MAX_LENGTH;
+            $this->_error = "length_max_exceed";
             return false;
         }
         return true;
@@ -144,7 +144,7 @@ abstract class DefaultPlugins
             if (strlen($data[self::ATTR_VALUE]) >= $data[self::ATTR_MIN_LENGTH]) {
                 return true;
             }
-            $this->_error = self::ATTR_MIN_LENGTH;
+            $this->_error = "length_min_exceed";
             return false;
         }
         return true;
@@ -163,7 +163,7 @@ abstract class DefaultPlugins
                 }
             }
 
-            $this->_error = self::ATTR_REGEXP;
+            $this->_error = "invalid_regexp";
             return false;
         }
         return true;
@@ -178,7 +178,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_INT) !== false) {
             return true;
         }
-        $this->_error = self::TYPE_INT;
+        $this->_error = "invalid_int";
         return false;
     }
 
@@ -191,7 +191,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_FLOAT) !== false) {
             return true;
         }
-        $this->_error = self::TYPE_DOUBLE;
+        $this->_error = "invalid_double";
         return false;
     }
 
@@ -204,7 +204,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_EMAIL)) {
             return true;
         }
-        $this->_error = self::TYPE_EMAIL;
+        $this->_error = "invalid_email";
         return false;
     }
 
@@ -217,7 +217,7 @@ abstract class DefaultPlugins
         if (is_bool($data[self::ATTR_VALUE]) === true) {
             return true;
         }
-        $this->_error = self::TYPE_BOOLEAN;
+        $this->_error = "invalid_boolean";
         return false;
     }
 
@@ -230,7 +230,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_URL)) {
             return true;
         }
-        $this->_error = self::TYPE_URL;
+        $this->_error = "invalid_url";
         return false;
     }
 
@@ -243,7 +243,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             return true;
         }
-        $this->_error = self::TYPE_DOMAIN;
+        $this->_error = "invalid_domain";
         return false;
     }
 
@@ -256,7 +256,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP)) {
             return true;
         }
-        $this->_error = self::TYPE_IP;
+        $this->_error = "invalid_ip";
         return false;
     }
 
@@ -269,7 +269,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             return true;
         }
-        $this->_error = self::TYPE_IPV4;
+        $this->_error = "invalid_ipv4";
         return false;
     }
 
@@ -282,7 +282,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             return true;
         }
-        $this->_error = self::TYPE_IPV6;
+        $this->_error = "invalid_ipv6";
         return false;
     }
 
@@ -295,7 +295,7 @@ abstract class DefaultPlugins
         if (filter_var($data[self::ATTR_VALUE], FILTER_VALIDATE_MAC)) {
             return true;
         }
-        $this->_error = self::TYPE_MAC;
+        $this->_error = "invalid_mac";
         return false;
     }
 
@@ -308,7 +308,7 @@ abstract class DefaultPlugins
         if ((boolean)preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[.!@#$&+\/*_\-])[0-9a-zA-Z.!@#$&+\/*_\-]{6,}$/', $data[self::ATTR_VALUE])) {
             return true;
         }
-        $this->_error = self::TYPE_WEAK_PASSWD;
+        $this->_error = "invalid_weak_password";
         return false;
     }
 
@@ -322,7 +322,7 @@ abstract class DefaultPlugins
         if ($unix !== false || $unix != -1) {
             return true;
         }
-        $this->_error = self::TYPE_DATE;
+        $this->_error = "invalid_date";
         return false;
     }
 
@@ -338,7 +338,7 @@ abstract class DefaultPlugins
             return true;
         }
 
-        $this->_error = self::TYPE_SELECT;
+        $this->_error = "invalid_option";
         return false;
     }
 }
