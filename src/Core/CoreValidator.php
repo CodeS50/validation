@@ -27,6 +27,11 @@ abstract class CoreValidator extends DefaultPlugins
     private $plugins;
 
     /**
+     * @var KeyToLang
+     */
+    private $language;
+
+    /**
      * Validator constructor.
      * @param array $data
      * @param array $rules
@@ -34,6 +39,7 @@ abstract class CoreValidator extends DefaultPlugins
     public function __construct(array $data = [], array $rules = [])
     {
         $this->error = new Error();
+        $this->setLanguage("");
         $this->_data = $data;
         $this->_rules = $rules;
         $this->plugins = [
@@ -122,7 +128,7 @@ abstract class CoreValidator extends DefaultPlugins
         $status = true;
         foreach ($data as $i => $item) {
             if (!$this->isValid($item)) {
-                $this->error->setField($i, $this->_error);
+                $this->error->setField($i, $this->language->getLabel($this->_error));
                 $status = false;
             }
         }
@@ -160,7 +166,7 @@ abstract class CoreValidator extends DefaultPlugins
         $data[self::ATTR_VALUE] = $value;
         $data["value_type"] = gettype($value);
         if (!$this->isValid($data)) {
-            return $this->_error;
+            return $this->language->getLabel($this->_error);
         }
 
         return true;
@@ -229,5 +235,11 @@ abstract class CoreValidator extends DefaultPlugins
             $this->_error = "plugin_not_avaliable";
             return false;
         }
+    }
+
+
+    public function setLanguage(string $lang, bool $has_file = false)
+    {
+        $this->language = KeyToLang::getInstance($lang, $has_file);
     }
 }
